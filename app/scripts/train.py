@@ -1,8 +1,9 @@
 import torch
 from torch import nn
-from ..models.model import *
-from ..config import *
-from ..utils.calculate_similarity import *
+from ..models.siamese_network import *
+from .. models import model
+from ..configs import *
+from ..datasets.korean_aihub_sentence_dataset import get_dataloader, KoreanTypographyDataset
 
 # PyTorch TensorBoard support
 from torch.utils.tensorboard import SummaryWriter
@@ -11,29 +12,32 @@ from tqdm import tqdm
 
 
 def train_one_epoch(model, train_loader, epoch_index, optimizer, loss_fn, tb_writer):
-    # running_loss = 0.
-    # last_loss = 0.
 
     # Here, we use enumerate(training_loader) instead of
     # iter(training_loader) so that we can track the batch
     # index and do some intra-epoch reporting
     for i, data in enumerate(train_loader):
         # Every data instance is an input + label pair
-        anchor_img, pos_img, neg_img = data
-        anchor_img = anchor_img.to(DEVICE)
-        pos_img = pos_img.to(DEVICE)
-        neg_img = neg_img.to(DEVICE)
+        img_1, img_2, label = data
+        img_1 = img_1.to(DEVICE)
+        img_2 = img_2.to(DEVICE)
+        label = label.to(DEVICE)
 
         # Zero your gradients for every batch!
         optimizer.zero_grad()
 
         # Make predictions for this batch
-        a = model(anchor_img)
-        p = model(pos_img)
-        n = model(neg_img)
-
+        out = model(img_1, img_2)
+        
         # Compute the loss and its gradients
-        loss = loss_fn(a, p, n)
+        try:
+            loss = loss_fn(out, label)
+        except:
+            # 마지막 배치 데이터 수가 1개일 경우 label.size() == torch.size([])로 되어 에러 발생
+            if label.dim() == 0:
+                label = label.unsqueeze(dim=0)
+
+            loss = loss_fn(out, label)
         loss.backward()
 
         # Adjust learning weights
@@ -52,12 +56,24 @@ def train_one_epoch(model, train_loader, epoch_index, optimizer, loss_fn, tb_wri
     return last_loss
 
 
+
 def run():
-    model = SiameseNetwork() if MODEL == "SiameseNetwork" else SiameseNetwork() 
+    model = model if USE_PRE_TRAINED else SiameseNetwork() 
     model.to(DEVICE)
     loss_fn = nn.TripletMarginLoss(margin=TRIPLET_LOSS_MARGIN) if LOSS == "TripletMarginLoss" else nn.BCELoss()
     optim = torch.optim.Adam(model.parameters())
-
+    
+    root_dir = ROOT_DIR
+    train_dl = get_dataloader(root_dir=root_dir,
+                              is_train=True,
+                              is_sanity_check=False,
+                              batch_size=BATCH_SIZE,
+                              shuffle=True)
+    val_dl = get_dataloader(root_dir=root_dir,
+                            is_train=False,
+                            is_sanity_check=False,
+                            batch_size=BATCH_SIZE,
+                            shuffle=False)
 
     # Initializing in a separate cell so we can easily add more epochs to the same run
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -67,7 +83,12 @@ def run():
 
     best_vloss = 1_000_000.
 
-    for epoch in tqdm(range(epochs)):
+    checkpoint_dir = Path(f"./model_checkpoints/{timestamp}")
+    if not checkpoint_dir.exists():
+        checkpoint_dir.mkdir()
+        print(f"[{str(checkpoint_dir)}] directory is made!")
+
+    for epoch in tqdm(range(EPOCHS)):
         print(f'EPOCH {epoch+1}:')
 
         # Make sure gradient tracking is on, and do a pass over the data
@@ -87,31 +108,19 @@ def run():
 
         # Disable gradient computation and reduce memory consumption.
         running_vloss = 0.0
-        running_vsimilarity_pos = 0.0
-        running_vsimilarity_neg = 0.0
         with torch.no_grad():
             for i, vdata in enumerate(val_dl):
-                v_a_img, v_p_img, v_n_img = vdata
+                v_img_1, v_img_2, v_label = vdata
 
-                v_a_img = v_a_img.to(DEVICE)
-                v_p_img = v_p_img.to(DEVICE)
-                v_n_img = v_n_img.to(DEVICE)
+                v_img_1 = v_img_1.to(DEVICE)
+                v_img_2 = v_img_2.to(DEVICE)
+                v_label = v_label.to(DEVICE)
 
-                v_a = model(v_a_img)
-                v_p = model(v_p_img)
-                v_n = model(v_n_img)
-                vloss = loss_fn(v_a, v_p, v_n)
+                v_out = model(v_img_1, v_img_2)
+                vloss = loss_fn(v_out, v_label)
                 running_vloss += vloss
-
-                # 유사도 계산
-                pos_sim = cos_simil(v_a, v_p).mean().item()
-                neg_sim = cos_simil(v_a, v_n).mean().item()
-                running_vsimilarity_pos += pos_sim
-                running_vsimilarity_neg += neg_sim
-
+                
         avg_vloss = running_vloss / (i + 1)
-        avg_vsim_pos = running_vsimilarity_pos / (i + 1)
-        avg_vsim_neg = running_vsimilarity_neg / (i + 1)
         print(f'LOSS train [{last_loss :.5f}] / valid [{avg_vloss :.5f}]')
 
         # Log the running loss averaged per batch
@@ -119,12 +128,11 @@ def run():
         writer.add_scalars('Training vs. Validation Loss',
                         { 'Training' : last_loss, 'Validation' : avg_vloss },
                         epoch + 1)
-        writer.add_scalars("Similarity", {"pos_simil": avg_vsim_pos, "neg_simil":avg_vsim_neg}, epoch+1)
         writer.flush()
 
         # Track best performance, and save the model's state
-        # if avg_vloss < best_vloss:
-        #     best_vloss = avg_vloss
-        if True:
-            model_path = f'model_{timestamp}_epoch_{epoch+1}.pt'
+        if avg_vloss < best_vloss:
+            best_vloss = avg_vloss
+        # if True:
+            model_path = f'{str(checkpoint_dir)}/epoch_{str(epoch+1).zfill(4)}.pt'
             torch.save(model.state_dict(), model_path)
