@@ -4,8 +4,8 @@ import albumentations as A
 import numpy as np
 
 
-from models import model
-from configs import *
+from ..models import model
+from ..configs import *
 
 model.to(DEVICE)
 print(f"model to [{DEVICE}]")

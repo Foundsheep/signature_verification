@@ -1,6 +1,6 @@
 import torch
 from .siamese_network import SiameseNetwork
-from configs import *
+from ..configs import *
 
 model = SiameseNetwork()
 if DEVICE == "cuda":
