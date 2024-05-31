@@ -6,6 +6,7 @@ import numpy as np
 
 from models import model
 from configs import *
+from ..utils import calculate_similarity
 
 model.to(DEVICE)
 print(f"model to [{DEVICE}]")
@@ -70,15 +71,21 @@ def inference(input_1_path, input_2_path):
         model.eval()
 
         with torch.no_grad():
-            outs = model(img_1, img_2)
-            pred = torch.where(outs > 0.5, 1, 0)
+            out_1 = model(img_1)
+            out_2 = model(img_2)
+
+        similarity = calculate_similarity(out_1, out_2)
+        prob = (similarity.item() + 1) / 2
+        prob = (prob + 1) / 2
+        prob = f"{prob :.4f}"
+
+        # result setting
+        pred = torch.where(similarity > 0.0, 1, 0)
         
         if pred == 1:
             result = "similar"
         else:
             result = "dissimilar"
-        prob = outs.item()
-        prob = f"{prob :.4f}"
     except:
         result = "Error occured"
         prob = "Erro occured"
