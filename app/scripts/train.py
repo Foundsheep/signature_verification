@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 from ..models.siamese_network import *
-from .. models import model
+from ..models import model
 from ..configs import *
 from ..datasets.korean_aihub_sentence_dataset import get_dataloader, KoreanTypographyDataset
 
