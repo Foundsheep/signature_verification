@@ -2,7 +2,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 from ..models.siamese_network import *
-from .. models import model
+from ..models import model
 from ..configs import *
 from ..datasets.korean_aihub_sentence_dataset import get_dataloader
 from ..utils import calculate_similarity
