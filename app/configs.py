@@ -22,7 +22,7 @@ if not Path(WEIGHT_PATH).exists:
 
 USE_PRE_TRAINED = True
 
-ROOT_DIR = "/root/workspace/01_twin_network/01_resources/245.개인 특정을 위한 자필과 모사 필기체 데이터/01-1.정식개방데이터"
+ROOT_DIR = "/root/workspace/01_tn/resources/245.개인_특정을_위한_자필과_모사_필기체_데이터/01-1.정식개방데이터"
 
 # transform
 TRANSFORM = A.Compose(
