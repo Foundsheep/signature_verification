@@ -1,11 +1,11 @@
 import torch
 from torch import nn
-from torchvision.models import resnet18
+from torchvision.models import resnet18, resnet34
 
 class SiameseNetwork_OutputEmbedding(nn.Module):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.cnn_model = resnet18(weights=None)
+        self.cnn_model = resnet34(weights=None)
 
     def forward(self, x):
         out = self.cnn_model(x)
