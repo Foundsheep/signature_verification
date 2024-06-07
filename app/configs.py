@@ -9,7 +9,7 @@ print(f"device: [{DEVICE}]")
 TRIPLET_LOSS_MARGIN = 50.0
 MODEL = "SiameseNetwork_OutputEmbedding"
 LOSS = "BCELoss"
-EPOCHS = 50
+EPOCHS = 200
 
 
 WEIGHT_PATH = os.path.join(os.path.dirname(__file__), "models/checkpoints/20240523_135239/epoch_0039.pt")
