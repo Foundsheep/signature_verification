@@ -1,17 +1,17 @@
 services:
-  # api:
-  #   build: .
-  #   ports:
-  #     - '8000:8000'
-  #   restart: "always"
-  #   container_name: ke_service
-  #   develop:
-  #     watch:
-  #       - action: rebuild
-  #         path: .
-  #         target: /code
-  #         ignore: 
-  #           - /code/notebooks/
+  api:
+    build: .
+    ports:
+      - '8000:8000'
+    restart: "always"
+    container_name: ke_service
+    develop:
+      watch:
+        - action: rebuild
+          path: .
+          target: /code
+          ignore: 
+            - /code/notebooks/
   gradio-app:
     build: 
       dockerfile: ./Dockerfile_gradio

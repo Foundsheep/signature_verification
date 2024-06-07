@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+import torch.nn.functional as F
 from ..models.siamese_network import *
 from ..models import model
 from ..configs import *
@@ -11,13 +12,25 @@ from datetime import datetime
 from tqdm import tqdm
 
 
+def get_instances():
+    model = SiameseNetwork_OutputEmbedding()
+    if LOSS == "BCELoss":
+        loss_fn = nn.BCELoss()
+    elif LOSS == "TripletMarginWithDistanceLoss":
+        loss_fn = nn.TripletMarginWithDistanceLoss(distance_function=lambda x, y: 1.0 - F.cosine_similarity(x, y))
+
+    model = SiameseNetwork()
+    model.to(DEVICE)
+    optim = torch.optim.Adam(model.parameters())
+    return model, loss_fn, optim
+
+
 def train_one_epoch(model, train_loader, epoch_index, optimizer, loss_fn, tb_writer):
 
     # Here, we use enumerate(training_loader) instead of
     # iter(training_loader) so that we can track the batch
     # index and do some intra-epoch reporting
     for i, data in enumerate(train_loader):
-        # Every data instance is an input + label pair
         img_1, img_2, label = data
         img_1 = img_1.to(DEVICE)
         img_2 = img_2.to(DEVICE)
@@ -45,41 +58,18 @@ def train_one_epoch(model, train_loader, epoch_index, optimizer, loss_fn, tb_wri
 
         last_loss = loss.item()
         if (i+1) % 10 == 0:
-            # last_loss = running_loss / 1000 # loss per batch
-            # print(f'  iteration [{i + 1}] loss: [{last_loss :.5f}]')
+            print(f'  iteration [{i + 1}] loss: [{last_loss :.5f}]')
             tb_x = epoch_index * len(train_loader) + i + 1
             tb_writer.add_scalar('Loss/train', last_loss, tb_x)
-            # running_loss = 0.
-            # last_loss = 0.
-
-
     return last_loss
 
 
 
-def run():
-    model = model if USE_PRE_TRAINED else SiameseNetwork() 
-    model.to(DEVICE)
-    loss_fn = nn.TripletMarginLoss(margin=TRIPLET_LOSS_MARGIN) if LOSS == "TripletMarginLoss" else nn.BCELoss()
-    optim = torch.optim.Adam(model.parameters())
-    
-    root_dir = ROOT_DIR
-    train_dl = get_dataloader(root_dir=root_dir,
-                              is_train=True,
-                              is_sanity_check=False,
-                              batch_size=BATCH_SIZE,
-                              shuffle=True)
-    val_dl = get_dataloader(root_dir=root_dir,
-                            is_train=False,
-                            is_sanity_check=False,
-                            batch_size=BATCH_SIZE,
-                            shuffle=False)
+def run(model, loss_fn, optim, train_dl, val_dl):
 
     # Initializing in a separate cell so we can easily add more epochs to the same run
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     writer = SummaryWriter(f'runs/sample_test_{timestamp}')
-
-    epochs = EPOCHS
 
     best_vloss = 1_000_000.
 
@@ -131,8 +121,27 @@ def run():
         writer.flush()
 
         # Track best performance, and save the model's state
-        if avg_vloss < best_vloss:
+        if avg_vloss < best_vloss or (epoch + 1) == EPOCHS:
             best_vloss = avg_vloss
-        # if True:
             model_path = f'{str(checkpoint_dir)}/epoch_{str(epoch+1).zfill(4)}.pt'
             torch.save(model.state_dict(), model_path)
+
+    print("================= END =================")
+
+if __name__ == "__main__":
+    model, loss_fn, optim = get_instances()
+    train_dl = get_dataloader(root_dir=ROOT_DIR,
+                              is_train=True,
+                              is_sanity_check=None,
+                              batch_size=BATCH_SIZE,
+                              shuffle=True)
+    val_dl = get_dataloader(root_dir=ROOT_DIR,
+                            is_train=False,
+                            is_sanity_check=None,
+                            batch_size=BATCH_SIZE,
+                            shuffle=True)
+    run(model=model,
+        loss_fn=loss_fn,
+        optim=optim,
+        train_dl=train_dl,
+        val_dl=val_dl)
