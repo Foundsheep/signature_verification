@@ -4,7 +4,7 @@ services:
     ports:
       - '8000:8000'
     restart: "always"
-    container_name: ke_service
+    container_name: twin_net_service
     develop:
       watch:
         - action: rebuild
