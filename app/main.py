@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
 
+
 app = FastAPI()
 
 
@@ -14,5 +15,6 @@ def train():
 
 @app.post("/inference")
 def train():
+
     return {"message": "OK"}
 

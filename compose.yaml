@@ -1,27 +1,29 @@
 services:
-  api:
-    build: .
-    ports:
-      - '8000:8000'
-    restart: "always"
-    container_name: twin_net_service
-    develop:
-      watch:
-        - action: rebuild
-          path: .
-          target: /code
-          ignore: 
-            - /code/notebooks/
-  gradio-app:
-    build: 
-      dockerfile: ./Dockerfile_gradio
-    ports:
-      - '7860:7860'
-    restart: "always"
-    container_name: gradio_service
-    develop:
-      watch:
-        - action: rebuild
-          path: .
-          target: /code
-    command: python -u /code/app/gradio_main.py
+  # api:
+  #   build:
+  #     dockerfile: ./Dockerfile_fastapi
+  #   ports:
+  #     - '8000:8000'
+  #   restart: "always"
+  #   container_name: twin_net_service
+  #   develop:
+  #     watch:
+  #       - action: rebuild
+  #         path: .
+  #         target: /code
+  #         ignore: 
+  #           - /code/notebooks/
+  # gradio-app:
+  #   build: 
+  #     dockerfile: ./Dockerfile_gradio
+  #   ports:
+  #     - '7860:7860'
+  #   restart: "always"
+  #   container_name: gradio_service
+  #   develop:
+  #     watch:
+  #       - action: rebuild
+  #         path: .
+  #         target: /code
+  #   command: python -u /code/app/gradio_main.py
+  
