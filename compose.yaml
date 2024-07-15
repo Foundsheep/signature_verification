@@ -12,16 +12,16 @@ services:
           target: /code
           ignore: 
             - /code/notebooks/
-  gradio-app:
-    build: 
-      dockerfile: ./Dockerfile_gradio
-    ports:
-      - '7860:7860'
-    restart: "always"
-    container_name: gradio_service
-    develop:
-      watch:
-        - action: rebuild
-          path: .
-          target: /code
-    command: python -u /code/app/gradio_main.py
+  # gradio-app:
+  #   build: 
+  #     dockerfile: ./Dockerfile_gradio
+  #   ports:
+  #     - '7860:7860'
+  #   restart: "always"
+  #   container_name: gradio_service
+  #   develop:
+  #     watch:
+  #       - action: rebuild
+  #         path: .
+  #         target: /code
+  #   command: python -u /code/app/gradio_main.py

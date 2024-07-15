@@ -1,8 +1,10 @@
 import torch
 from PIL import Image
+import io
 import albumentations as A
 import numpy as np
-
+from pathlib import Path
+from starlette.datastructures import UploadFile # used instead of from fastapi import UploadFile
 
 from models import model
 from configs import *
@@ -10,7 +12,7 @@ from configs import *
 model.to(DEVICE)
 print(f"model to [{DEVICE}]")
 
-def read_image_for_inference(image_path):
+def read_image_for_inference(input_):
     # TODO: configs.py에 넣기
     def _transform_image(image):
         transform = A.Compose(
@@ -22,18 +24,28 @@ def read_image_for_inference(image_path):
 
         image = transform(image=image)["image"]
         return image
-    
+
+    image = None
     # get numpy array image
     # -- 1. from path
-    if isinstance(image_path, str):
-        image = Image.open(image_path)  # there was a case when 150th image was not valid
-        image = np.array(image)[:, :, :3]  # image has alpha channel -> 4 channels
+    if isinstance(input_, str):
+        if Path(input_).exists():
+            image = Image.open(input_)  # there was a case when 150th image was not valid
+            image = np.array(image)
+        else:
+            print(f"input type is string, but seems like not a path")
     # -- 2. from np.ndarray
-    elif isinstance(image_path, np.ndarray):
-        image = image_path
+    elif isinstance(input_, np.ndarray):
+        image = input_
+    elif isinstance(input_, Image.Image):
+        image = np.array(image)
+    elif isinstance(input_, UploadFile):
+        image = np.array(Image.open(io.BytesIO(input_.file.read())))
     else:
-        raise ValueError(f"not expected type of argument. image_path : [{type(image_path)}]")
+        raise ValueError(f"not expected type of argument. input_ : [{type(input_)}]")
     
+    # if image has alpha channel -> 4 channels
+    image = image[:, :, :3]
     try:
         # transform
         image = _transform_image(image)
@@ -49,21 +61,27 @@ def read_image_for_inference(image_path):
     return image
 
 
-def inference(input_1_path, input_2_path):
-    # print(f"input_1_path : [{type(input_1_path)}], input_2_path : [{type(input_2_path)}]")
+def inference(input_1, input_2):
+    # print(f"input_1 : [{type(input_1)}], input_2 : [{type(input_2)}]")
 
-    if isinstance(input_1_path, str) and isinstance(input_2_path, str):
-        img_1 = read_image_for_inference(input_1_path)
-        img_2 = read_image_for_inference(input_2_path)
-    elif isinstance(input_1_path, np.ndarray) and isinstance(input_2_path, np.ndarray):
-        img_1 = read_image_for_inference(input_1_path)
-        img_2 = read_image_for_inference(input_2_path)
-    elif isinstance(input_1_path, Image.Image) and isinstance(input_2_path, Image.Image):
-        img_1 = input_1_path
-        img_2 = input_2_path
-    else:
-        raise ValueError(f"arguments' type is wrong. input_1_path : [{type(input_1_path)}], input_2_path : [{type(input_2_path)}]")
-    
+    # if isinstance(input_1, bytes) and isinstance(input_2, bytes):
+    #     img_1 = 
+    #     img_1 = Image.open(io.BytesIO(input_2.file.read()))
+    # elif isinstance(input_1, str) and isinstance(input_2, str):
+    #     img_1 = read_image_for_inference(input_1)
+    #     img_2 = read_image_for_inference(input_2)
+    # elif isinstance(input_1, np.ndarray) and isinstance(input_2, np.ndarray):
+    #     img_1 = read_image_for_inference(input_1)
+    #     img_2 = read_image_for_inference(input_2)
+    # elif isinstance(input_1, Image.Image) and isinstance(input_2, Image.Image):
+    #     img_1 = input_1
+    #     img_2 = input_2
+    # else:
+    #     raise ValueError(f"arguments' type is wrong. input_1 : [{type(input_1)}], input_2 : [{type(input_2)}]")
+
+    img_1 = read_image_for_inference(input_1)
+    img_2 = read_image_for_inference(input_2)
+
     result = None
     prob = None
     try:
