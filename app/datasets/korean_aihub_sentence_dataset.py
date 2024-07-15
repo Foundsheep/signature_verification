@@ -222,13 +222,27 @@ class KoreanTypographyDataset(Dataset):
 def get_dataloader(root_dir, is_train, is_sanity_check, batch_size, shuffle):
 
     # transform
-    transform = A.Compose(
-        [
+    transform_train = A.Compose(
+        [   
+            A.Resize(512, 512),
+            A.RandomBrightnessContrast(),
+            A.Rotate(limit=(-45, 45)),
             A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
         ]
     )
 
+    transform_valid = A.Compose(
+        [
+            A.Resize(512, 512),
+            A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
+        ]
+    )
+
+
     # make dataset
-    ds = KoreanTypographyDataset(root_dir, transform, is_train, is_sanity_check)
+    if is_train:
+        ds = KoreanTypographyDataset(root_dir, transform_train, is_train, is_sanity_check)
+    else:
+        ds = KoreanTypographyDataset(root_dir, transform_valid, is_train, is_sanity_check)
     dl = DataLoader(ds, batch_size, shuffle)
     return dl

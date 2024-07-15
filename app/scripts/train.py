@@ -1,10 +1,14 @@
 import torch
 from torch import nn
 import torch.nn.functional as F
-from ..models.siamese_network import *
-from ..models import model
-from ..configs import *
-from ..datasets.korean_aihub_sentence_dataset import get_dataloader, KoreanTypographyDataset
+from pathlib import Path
+import sys
+
+sys.path.append(str(Path(__file__).absolute().parent.parent))
+
+from models.siamese_network import *
+from configs import *
+from datasets.korean_aihub_sentence_dataset import get_dataloader, KoreanTypographyDataset
 
 # PyTorch TensorBoard support
 from torch.utils.tensorboard import SummaryWriter
@@ -12,14 +16,18 @@ from datetime import datetime
 from tqdm import tqdm
 
 
-def get_instances():
+def get_instances(is_new):
     model = SiameseNetwork_OutputEmbedding()
     if LOSS == "BCELoss":
         loss_fn = nn.BCELoss()
     elif LOSS == "TripletMarginWithDistanceLoss":
         loss_fn = nn.TripletMarginWithDistanceLoss(distance_function=lambda x, y: 1.0 - F.cosine_similarity(x, y))
 
-    model = SiameseNetwork()
+    if is_new:
+        model = SiameseNetwork()
+    else:
+        from models import model
+
     model.to(DEVICE)
     optim = torch.optim.Adam(model.parameters())
     return model, loss_fn, optim
@@ -72,10 +80,10 @@ def run(model, loss_fn, optim, train_dl, val_dl):
     writer = SummaryWriter(f'runs/sample_test_{timestamp}')
 
     best_vloss = 1_000_000.
-
+    
     checkpoint_dir = Path(f"./model_checkpoints/{timestamp}")
     if not checkpoint_dir.exists():
-        checkpoint_dir.mkdir()
+        checkpoint_dir.mkdir(parents=True)
         print(f"[{str(checkpoint_dir)}] directory is made!")
 
     for epoch in tqdm(range(EPOCHS)):
@@ -129,7 +137,7 @@ def run(model, loss_fn, optim, train_dl, val_dl):
     print("================= END =================")
 
 if __name__ == "__main__":
-    model, loss_fn, optim = get_instances()
+    model, loss_fn, optim = get_instances(is_new=True)
     train_dl = get_dataloader(root_dir=ROOT_DIR,
                               is_train=True,
                               is_sanity_check=None,

@@ -17,7 +17,7 @@ def read_image_for_inference(input_):
     def _transform_image(image):
         transform = A.Compose(
             [
-                A.Resize(height=88, width=765),
+                A.Resize(height=512, width=512),
                 A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),        
             ]
         )
@@ -62,23 +62,6 @@ def read_image_for_inference(input_):
 
 
 def inference(input_1, input_2):
-    # print(f"input_1 : [{type(input_1)}], input_2 : [{type(input_2)}]")
-
-    # if isinstance(input_1, bytes) and isinstance(input_2, bytes):
-    #     img_1 = 
-    #     img_1 = Image.open(io.BytesIO(input_2.file.read()))
-    # elif isinstance(input_1, str) and isinstance(input_2, str):
-    #     img_1 = read_image_for_inference(input_1)
-    #     img_2 = read_image_for_inference(input_2)
-    # elif isinstance(input_1, np.ndarray) and isinstance(input_2, np.ndarray):
-    #     img_1 = read_image_for_inference(input_1)
-    #     img_2 = read_image_for_inference(input_2)
-    # elif isinstance(input_1, Image.Image) and isinstance(input_2, Image.Image):
-    #     img_1 = input_1
-    #     img_2 = input_2
-    # else:
-    #     raise ValueError(f"arguments' type is wrong. input_1 : [{type(input_1)}], input_2 : [{type(input_2)}]")
-
     img_1 = read_image_for_inference(input_1)
     img_2 = read_image_for_inference(input_2)
 

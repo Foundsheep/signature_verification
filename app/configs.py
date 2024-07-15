@@ -23,6 +23,7 @@ USE_PRE_TRAINED = True
 
 # TODO: 도커 내에서 접근할 수 없음. 접근 방법 필요
 ROOT_DIR = r"C:\Users\msi\Desktop\workspace\015_twin_networks\02_resources\245.개인 특정을 위한 자필과 모사 필기체 데이터\01-1.정식개방데이터"
+ROOT_DIR = "/root/workspace/01_tn/resources/245.개인 특정을 위한 자필과 모사 필기체 데이터/01-1.정식개방데이터"
 # transform
 TRANSFORM = A.Compose(
     [
