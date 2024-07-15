@@ -26,4 +26,17 @@ services:
   #         path: .
   #         target: /code
   #   command: python -u /code/app/gradio_main.py
-  
+  model-serving:
+    build: .
+    ports:
+      - '8080:8080'
+      - '8081:8081'
+    container_name: model_serving_service
+    develop:
+      watch:
+        - action: rebuild
+          path: .
+          target: /code
+          ignore:
+            - /code/notebooks
+    command: torchserve --start --ts-config /code/config.properties
