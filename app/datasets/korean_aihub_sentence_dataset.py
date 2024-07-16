@@ -140,7 +140,15 @@ class KoreanTypographyDataset(Dataset):
                 number_of_labels = len(lab_tf)
                 
                 # 윗 단계에서 라벨 경로 먼저 구하고
-                label_path = lab_tf[0] / "labels(sent1).json"
+                i = 1
+                label_path = lab_tf[0] / f"labels(sent{i}).json"
+                if not label_path.exists():
+                    while not label_path.exists():
+                        i += 1
+                        label_path = lab_tf[0] / f"labels(sent{i}).json"
+                        if i == 100:
+                            break
+
                 
                 # 이미지는 폴더들마다 마지막꺼가 필요하니 for loop
                 for img_pos, lab_pos in zip(img_tf, lab_tf):
