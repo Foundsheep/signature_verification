@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Form, UploadFile
+from fastapi.middleware.core import CORSMiddleware
 from typing import Annotated
 import traceback
 from pathlib import Path
@@ -7,6 +8,19 @@ import sys
 sys.path.append(str(Path(__file__).absolute().parent))
 from app.scripts.inference import inference
 app = FastAPI()
+
+origins = [
+    "*",
+]
+
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/")
