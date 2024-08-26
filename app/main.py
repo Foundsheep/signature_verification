@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Form, UploadFile
-from fastapi.middleware.core import CORSMiddleware
+from fastapi.middleware.cors import CORSMiddleware
 from typing import Annotated
 import traceback
 from pathlib import Path
