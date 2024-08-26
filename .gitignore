@@ -161,3 +161,4 @@ cython_debug/
 
 notebooks/
 /app/scripts/runs
+/app/scripts/model_checkpoints

@@ -16,6 +16,8 @@ class SiameseNetwork_OutputEmbedding(nn.Module):
 class SiameseNetwork(nn.Module):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
+
+        # TODO: model weights from local
         self.cnn_model = resnet18(weights=None)
         
         # ------ sample tiny model
@@ -33,9 +35,9 @@ class SiameseNetwork(nn.Module):
         #     nn.Linear(1, 1000)
         # )
         self.fc = nn.Sequential(
-            # nn.Linear(self.cnn_model.fc.out_features * 2, 256),
-            nn.Linear(self.cnn_model.fc.out_features, 256),
-            nn.ReLU(inplace=True),
+            nn.Linear(self.cnn_model.fc.out_features * 2, 256),
+            # nn.Linear(self.cnn_model.fc.out_features, 256),
+            nn.ReLU(),
             nn.Linear(256, 1)
         )
 
@@ -51,8 +53,8 @@ class SiameseNetwork(nn.Module):
         out_2 = self.forward_once(input_2)
 
         # concatenate both images' fatures
-        # out = torch.cat((out_1, out_2), 1)
-        out = torch.add(out_1, out_2)
+        out = torch.cat((out_1, out_2), 1)
+        # out = torch.add(out_1, out_2)
 
         # pass the features to linear layers
         out = self.fc(out)

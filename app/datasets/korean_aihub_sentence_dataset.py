@@ -232,7 +232,7 @@ def get_dataloader(root_dir, is_train, is_sanity_check, batch_size, shuffle):
     # transform
     transform_train = A.Compose(
         [   
-            A.Resize(512, 512),
+            # A.Resize(512, 512),
             A.RandomBrightnessContrast(),
             A.Rotate(limit=(-45, 45)),
             A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
@@ -241,7 +241,7 @@ def get_dataloader(root_dir, is_train, is_sanity_check, batch_size, shuffle):
 
     transform_valid = A.Compose(
         [
-            A.Resize(512, 512),
+            # A.Resize(512, 512),
             A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
         ]
     )

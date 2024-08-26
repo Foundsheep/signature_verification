@@ -13,18 +13,6 @@ model.to(DEVICE)
 print(f"model to [{DEVICE}]")
 
 def read_image_for_inference(input_):
-    # TODO: configs.py에 넣기
-    def _transform_image(image):
-        transform = A.Compose(
-            [
-                A.Resize(height=512, width=512),
-                A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),        
-            ]
-        )
-
-        image = transform(image=image)["image"]
-        return image
-
     image = None
     # get numpy array image
     # -- 1. from path
@@ -48,7 +36,7 @@ def read_image_for_inference(input_):
     image = image[:, :, :3]
     try:
         # transform
-        image = _transform_image(image)
+        image = TRANSFORM(image=image)["image"]
         
         # convert to torch.tensor
         image = image.transpose((2, 0, 1))

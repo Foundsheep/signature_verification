@@ -29,7 +29,8 @@ def get_instances(is_new):
         from models import model
 
     model.to(DEVICE)
-    optim = torch.optim.Adam(model.parameters())
+    # optim = torch.optim.Adam(model.parameters())
+    optim = torch.optim.SGD(model.parameters(), lr=0.01)
     return model, loss_fn, optim
 
 
@@ -57,14 +58,16 @@ def train_one_epoch(model, train_loader, epoch_index, optimizer, loss_fn, tb_wri
             # 마지막 배치 데이터 수가 1개일 경우 label.size() == torch.size([])로 되어 에러 발생
             if label.dim() == 0:
                 label = label.unsqueeze(dim=0)
+            if out.dim() == 0:
+                out = out.unsqueeze(dim=0)
 
             loss = loss_fn(out, label)
         loss.backward()
 
         # Adjust learning weights
         optimizer.step()
-
         last_loss = loss.item()
+
         if (i+1) % 10 == 0:
             print(f'  iteration [{i + 1}] loss: [{last_loss :.5f}]')
             tb_x = epoch_index * len(train_loader) + i + 1

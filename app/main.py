@@ -13,10 +13,6 @@ app = FastAPI()
 def hello_world():
     return {"message": "OK"}
 
-@app.post("/train")
-def train():
-    return {"message": "OK"}
-
 @app.post("/inference")
 def infer(
     input_1: Annotated[UploadFile, Form()],
